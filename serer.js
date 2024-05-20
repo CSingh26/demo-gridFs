@@ -10,14 +10,10 @@ dotenv.config()
 const app = express()
 
 //database
-const options = {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-}
 
 const url = 'mongodb+srv://csin:heml0@cluster0.msiih3e.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'
 
-mong.connect(url, options)
+mong.connect(url)
     .then(() => console.log('MongoDB connected'))
     .catch((err) => console.error('Error connecting to MondoDB:', err))
 
