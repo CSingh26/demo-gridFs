@@ -26,21 +26,23 @@ mong.connection.on('connected', () => {
 })
 
 //single-file upload
-
 app.post("/upload/file", upload().single("file"), async (req, res) => {
-    try {
-        res.status(201).json({
-            message: "File uploaded suucessfully"
-        })
-    } catch (err) {
-        res.status(400).json({
-            error: {
-                meesage: "Unable to upload the file",
-                error: err
-            }
-        })
+    if (!req.file) {
+        return res.status(400).send('No file uploaded.')
     }
+
+    const uploadStream = bucket.openUploadStream(req.file.originalname);
+    uploadStream.end(req.file.buffer);
+
+    uploadStream.on('finish', () => {
+        res.status(200).send('File Uploaded Successfully');
+    });
+
+    uploadStream.on('error', (err) => {
+        res.status(500).send('Error uploading file:', err);
+    })
 })
+
 app.use(bodyParser.json())
 app.use(logger("dev"))
 
