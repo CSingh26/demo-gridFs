@@ -43,6 +43,39 @@ app.post("/upload/file", upload().single("file"), async (req, res) => {
     })
 })
 
+//upload mutiple files
+app.post("/upload/files", upload().array("files"), async (req, res) => {
+    if (!req.files || req.files.length ==0) {
+        return res.status(400).send(
+            'No file uploaded'
+        )
+    }
+
+    try {
+        const uploadPromise = req.files.map(file => {
+            return new Promise((resolve, reject) => {
+                const uploadStream = bucket.openUploadStream(file.originalname)
+                uploadStream.end(file.buffer)
+
+                uploadStream.on('finish', () => {
+                    resolve('File uploaded successfully')
+                })
+
+                uploadStream.on('error', (err) => {
+                    reject('Error uploading the file' + err.message)
+                })
+            })
+        })
+
+        const results = await Promise.all(uploadPromise)
+        res.status(200).send(results)
+    } catch (err) {
+        res.status(500).send(
+            'Error Uploading the files' + err.message
+        )
+    }
+})
+
 app.use(bodyParser.json())
 app.use(logger("dev"))
 
