@@ -10,8 +10,9 @@ dotenv.config()
 const app = express()
 
 //database
-
-const url = 'mongodb+srv://csin:heml0@cluster0.msiih3e.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0'
+const userName = process.env.MONGO_USER
+const pwd = process.env.MONGO_USER_PWD
+const url = `mongodb+srv://${userName}:${pwd}@cluster0.msiih3e.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`
 
 mong.connect(url)
     .then(() => console.log('MongoDB connected'))
