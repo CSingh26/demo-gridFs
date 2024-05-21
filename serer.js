@@ -24,6 +24,7 @@ mong.connection.on('connected', () => {
         bucketName: 'filesBucket',
     })
 })
+// POST-REQUESTS
 
 //single-file upload
 app.post("/upload/file", upload().single("file"), async (req, res) => {
@@ -35,7 +36,9 @@ app.post("/upload/file", upload().single("file"), async (req, res) => {
     uploadStream.end(req.file.buffer);
 
     uploadStream.on('finish', () => {
-        res.status(200).send('File Uploaded Successfully');
+        res.status(200).send(
+            'File uploaded with ID:' + uploadStream.id
+        );
     });
 
     uploadStream.on('error', (err) => {
@@ -58,7 +61,9 @@ app.post("/upload/files", upload().array("files"), async (req, res) => {
                 uploadStream.end(file.buffer)
 
                 uploadStream.on('finish', () => {
-                    resolve('File uploaded successfully')
+                    resolve(
+                        'FileId:' + uploadStream.id
+                    )
                 })
 
                 uploadStream.on('error', (err) => {
@@ -68,14 +73,37 @@ app.post("/upload/files", upload().array("files"), async (req, res) => {
         })
 
         const results = await Promise.all(uploadPromise)
-        res.status(200).send(results)
+        res.status(200).send( { fileID: results } )
     } catch (err) {
         res.status(500).send(
             'Error Uploading the files' + err.message
         )
     }
 })
+//GET REQUESTS
 
+//download single file
+app.get('/download/file/:id', async (req, res) => {
+    try {
+        const fid = new mong.Types.ObjectId(req.params.id)
+
+        const downloadStream = bucket.openDownloadStream(fid)
+
+        downloadStream.on('error', (err) => {
+            console.log(err)
+            res.status(404).send('File not found with ' + fid + ' file id')
+        })
+
+        downloadStream.pipe(res).on('error', (err) => {
+            console.log(err)
+            res.status(500).send('Error streaming the file: ' + err.message)
+        })
+    } catch (err) {
+        res.status(500).send(
+            'Error download the file' + err.message
+        )
+    }
+})
 app.use(bodyParser.json())
 app.use(logger("dev"))
 
